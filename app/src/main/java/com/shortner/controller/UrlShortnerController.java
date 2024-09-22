@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shortner.exceptions.CustomSlugExistsException;
+import com.shortner.exceptions.UrlProcessingException;
 import com.shortner.model.ErrorDetails;
 import com.shortner.model.Url;
 import com.shortner.model.UrlDTO;
@@ -36,7 +38,7 @@ public class UrlShortnerController {
 		
 		try {
 			if (urlService.doesSlugexist(urlDto.getSlug())) {
-				return ResponseEntity.status(HttpStatus.CONFLICT).body("Slug already exists");
+				throw new CustomSlugExistsException("Slug already exists");
 			}
 			
 			// getting the short url
@@ -56,17 +58,27 @@ public class UrlShortnerController {
 				
 				return ResponseEntity.status(HttpStatus.OK).body(urlResponseDTO);
 				
-			}else {
-				UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
-				urlErrorResponseDTO.setErrorCode("Error in processing request");
-				urlErrorResponseDTO.setStatus("404");
-				
-				return ResponseEntity.status(HttpStatus.OK).body(urlErrorResponseDTO);
+			} else {
+				throw new UrlProcessingException("Error in processing request");
 			}
+			
+		} catch (CustomSlugExistsException e) {
+			UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+			urlErrorResponseDTO.setErrorCode(e.getMessage());
+			urlErrorResponseDTO.setStatus("409");
+			
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(urlErrorResponseDTO);
+			
+		} catch (UrlProcessingException e) {
+			UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+			urlErrorResponseDTO.setErrorCode(e.getMessage());
+			urlErrorResponseDTO.setStatus("400");
+			
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(urlErrorResponseDTO);
 			
 		} catch (Exception e) {
 			UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
-			urlErrorResponseDTO.setErrorCode("Internal Server Error");
+			urlErrorResponseDTO.setErrorCode("Unexpected Error occured: " + e.getMessage());
 			urlErrorResponseDTO.setStatus("500");
 			
 			return new ResponseEntity<>(urlErrorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -106,9 +118,12 @@ public class UrlShortnerController {
 	}
 	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException expObject) {
+	public ResponseEntity<UrlErrorResponseDTO> handleValidationException(MethodArgumentNotValidException expObject) {
 		String message = expObject.getBindingResult().getFieldError().getDefaultMessage();
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorDetails(message));
+		UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+		urlErrorResponseDTO.setErrorCode(message);
+		urlErrorResponseDTO.setStatus("400");
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(urlErrorResponseDTO);
 	}
 	
 }
