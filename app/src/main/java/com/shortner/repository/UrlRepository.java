@@ -10,4 +10,6 @@ public interface UrlRepository extends JpaRepository<Url, Long>{
 	
 	public Url findbyShortUrl(String shortUrlLink);
 	
+	public boolean existsByShortUrl(String customSlug);
+	
 }

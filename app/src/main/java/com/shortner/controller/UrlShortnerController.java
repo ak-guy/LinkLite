@@ -7,12 +7,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shortner.model.ErrorDetails;
 import com.shortner.model.Url;
 import com.shortner.model.UrlDTO;
 import com.shortner.model.UrlErrorResponseDTO;
@@ -20,6 +23,7 @@ import com.shortner.model.UrlResponseDTO;
 import com.shortner.services.UrlService;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 @RestController
 public class UrlShortnerController {
@@ -28,22 +32,45 @@ public class UrlShortnerController {
 	private UrlService urlService;
 	
 	@PostMapping("/generate")
-	public ResponseEntity<?> generateShortUrl(@RequestBody UrlDTO urlDto) {
-		Url urlToReturn = urlService.generateShorlUrl(urlDto);
+	public ResponseEntity<?> generateShortUrl(@Valid @RequestBody UrlDTO urlDto) {
 		
-		if (urlToReturn != null) {
-			UrlResponseDTO urlResponseDTO = new UrlResponseDTO();
-			urlResponseDTO.setShortUrl(urlToReturn.getShortLink());
-			urlResponseDTO.setOriginalUrl(urlToReturn.getOriginalUrl());
-			urlResponseDTO.setExpirationDate(urlToReturn.getExpiryDate());
+		try {
+			if (urlService.doesSlugexist(urlDto.getSlug())) {
+				return ResponseEntity.status(HttpStatus.CONFLICT).body("Slug already exists");
+			}
 			
-			return new ResponseEntity<UrlResponseDTO>(urlResponseDTO, HttpStatus.OK);
+			// getting the short url
+			Url urlToReturn = null;
+			if (urlDto.getSlug() != null) {
+				urlToReturn = urlService.generateUrlWithCustomSlug(urlDto);
+				
+			}else {
+				urlToReturn = urlService.generateShorlUrl(urlDto);
+			}
+			
+			if (urlToReturn != null) {
+				UrlResponseDTO urlResponseDTO = new UrlResponseDTO();
+				urlResponseDTO.setShortUrl(urlToReturn.getShortLink());
+				urlResponseDTO.setOriginalUrl(urlToReturn.getOriginalUrl());
+				urlResponseDTO.setExpirationDate(urlToReturn.getExpiryDate());
+				
+				return ResponseEntity.status(HttpStatus.OK).body(urlResponseDTO);
+				
+			}else {
+				UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+				urlErrorResponseDTO.setErrorCode("Error in processing request");
+				urlErrorResponseDTO.setStatus("404");
+				
+				return ResponseEntity.status(HttpStatus.OK).body(urlErrorResponseDTO);
+			}
+			
+		} catch (Exception e) {
+			UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+			urlErrorResponseDTO.setErrorCode("Internal Server Error");
+			urlErrorResponseDTO.setStatus("500");
+			
+			return new ResponseEntity<>(urlErrorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		
-		UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
-		urlErrorResponseDTO.setErrorCode("Error in processing request");
-		urlErrorResponseDTO.setStatus("404");
-		return new ResponseEntity<UrlErrorResponseDTO>(urlErrorResponseDTO, HttpStatus.OK);
 	}
 	
 	@GetMapping("/{shortUrl}")
@@ -76,6 +103,12 @@ public class UrlShortnerController {
 		response.sendRedirect(urlToReturnUrl.getOriginalUrl());
 		return null;
 		
+	}
+	
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException expObject) {
+		String message = expObject.getBindingResult().getFieldError().getDefaultMessage();
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorDetails(message));
 	}
 	
 }

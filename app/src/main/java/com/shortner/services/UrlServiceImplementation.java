@@ -35,20 +35,13 @@ public class UrlServiceImplementation implements UrlService{
 	
 	@Override
 	public Url generateShorlUrl(UrlDTO urlDTO) {
-		if (StringUtils.isNotEmpty(urlDTO.getUrl())) {
-			String encodeUrl = encodeUrl(urlDTO.getUrl());
-			Url url = new Url();
-			url.setCreationDate(LocalDateTime.now());
-			url.setOriginalUrl(urlDTO.getUrl());
-			url.setShortLink(encodeUrl);
-			url.setExpiryDate(getExpirationDateTime(urlDTO.getExpiryDate(), url.getCreationDate()));
-			Url urlToReturn = persistShortUrl(url);
-			if (urlToReturn != null) {
-				return urlToReturn;
-			}
-			return null;
-		}
-		return null;
+		String encodeUrl = encodeUrl(urlDTO.getUrl());
+		LocalDateTime createdDateTime = LocalDateTime.now();
+		LocalDateTime expiryDateTime = getExpirationDateTime(urlDTO.getExpiryDate(), createdDateTime);
+		
+		Url urltoPersiUrl = new Url(urlDTO.getUrl(), encodeUrl, createdDateTime, expiryDateTime);
+		
+		return persistShortUrl(urltoPersiUrl);
 		
 	}
 	
@@ -64,7 +57,23 @@ public class UrlServiceImplementation implements UrlService{
 		return urlToReturn;
 	}
 	
+	@Override
 	public void deleteShortUrl(Url url) {
 		urlRepository.delete(url);
 	}
+	
+	@Override
+	public boolean doesSlugexist(String slug) {
+		return urlRepository.existsByShortUrl(slug);
+	}
+	
+	@Override
+	public Url generateUrlWithCustomSlug(UrlDTO urlDTO) {
+		LocalDateTime creationDateTime = LocalDateTime.now();
+		LocalDateTime expiryDateTime = getExpirationDateTime(urlDTO.getExpiryDate(), creationDateTime);
+		
+		Url toReturnUrl = new Url(urlDTO.getUrl(), urlDTO.getSlug(), creationDateTime, expiryDateTime);
+		return toReturnUrl;
+	}
+	
 }

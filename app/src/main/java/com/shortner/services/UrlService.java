@@ -16,4 +16,8 @@ public interface UrlService {
 	
 	public void deleteShortUrl(Url url);
 	
+	public boolean doesSlugexist(String slug);
+	
+	public Url generateUrlWithCustomSlug(UrlDTO urlDTO);
+	
 }
