@@ -1,7 +1,9 @@
 package com.shortner.services;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,9 @@ public class UrlServiceImplementation implements UrlService{
 			// for manual testing
 			return creationDate.plusSeconds(60);
 		}
-		return LocalDateTime.parse(expirationDate);
+		LocalDate expiryDateObj = LocalDate.parse(expirationDate, DateTimeFormatter.ISO_DATE);
+		LocalDateTime expiryDateTimeObj = expiryDateObj.atStartOfDay();
+		return expiryDateTimeObj;
 	}
 	
 	@Override
