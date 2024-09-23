@@ -1,5 +1,7 @@
 package com.shortner.model;
 
+import com.shortner.annotations.ValidExpirationDate;
+
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 
@@ -10,6 +12,7 @@ public class UrlDTO {
 	private String url;
 	
 	@Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}", message = "expiry date must be yyyy-mm-dd")
+	@ValidExpirationDate
 	private String expiryDate;
 	
 	@Pattern(regexp = "^[a-zA-Z0-9]{3,8}", message = "Custom slug have 3 to 8 alphanumeric characters")
