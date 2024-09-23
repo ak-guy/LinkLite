@@ -8,7 +8,7 @@ import com.shortner.model.UrlDTO;
 @Service
 public interface UrlService {
 	
-	public Url generateShorlUrl(UrlDTO urlDTO);
+	public Url createUrlwithRandomSlug(UrlDTO urlDTO);
 	
 	public Url persistShortUrl(Url url);
 	
@@ -18,6 +18,6 @@ public interface UrlService {
 	
 	public boolean doesSlugexist(String slug);
 	
-	public Url generateUrlWithCustomSlug(UrlDTO urlDTO);
+	public Url createUrlWithCustomSlug(UrlDTO urlDTO);
 	
 }

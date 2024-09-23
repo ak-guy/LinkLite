@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ public class UrlServiceImplementation implements UrlService{
 	@Autowired
 	private UrlRepository urlRepository;
 	
+	@Deprecated
 	private String encodeUrl(String url) {
 		String encodedUrl = "";
 		LocalDateTime time = LocalDateTime.now();
@@ -38,12 +40,12 @@ public class UrlServiceImplementation implements UrlService{
 	}
 	
 	@Override
-	public Url generateShorlUrl(UrlDTO urlDTO) {
-		String encodeUrl = encodeUrl(urlDTO.getUrl());
+	public Url createUrlwithRandomSlug(UrlDTO urlDTO) {
+		String randomSlug = generateRandomSlug();
 		LocalDateTime createdDateTime = LocalDateTime.now();
 		LocalDateTime expiryDateTime = getExpirationDateTime(urlDTO.getExpiryDate(), createdDateTime);
 		
-		Url urltoPersiUrl = new Url(urlDTO.getUrl(), encodeUrl, createdDateTime, expiryDateTime);
+		Url urltoPersiUrl = new Url(urlDTO.getUrl(), randomSlug, createdDateTime, expiryDateTime);
 		
 		return persistShortUrl(urltoPersiUrl);
 		
@@ -72,7 +74,7 @@ public class UrlServiceImplementation implements UrlService{
 	}
 	
 	@Override
-	public Url generateUrlWithCustomSlug(UrlDTO urlDTO) {
+	public Url createUrlWithCustomSlug(UrlDTO urlDTO) {
 		LocalDateTime creationDateTime = LocalDateTime.now();
 		LocalDateTime expiryDateTime = getExpirationDateTime(urlDTO.getExpiryDate(), creationDateTime);
 		
@@ -80,4 +82,31 @@ public class UrlServiceImplementation implements UrlService{
 		return toReturnUrl;
 	}
 	
+	private String generateRandomSlug() {
+		String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		String generatedString = "";
+		
+		boolean isUnique = false;
+		while (!isUnique) {
+			generatedString = getRandomString(characters, 7);
+			if (!urlRepository.existsByShortUrl(generatedString)) {
+				isUnique = true;
+			}
+		}
+		
+		return generatedString;
+	}
+	
+	private String getRandomString(String chars, int length) {
+		int n = chars.length();
+		StringBuilder resString = new StringBuilder();
+		Random random = new Random();
+		
+		for (int i=0; i<length; i++) {
+			int index = random.nextInt(n);
+			resString.append(chars.charAt(index));
+		}
+		
+		return resString.toString();
+	}
 }
