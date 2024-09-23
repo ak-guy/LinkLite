@@ -1,4 +1,4 @@
-package com.shortner.model;
+package com.shortner.dto;
 
 import com.shortner.annotations.ValidExpirationDate;
 

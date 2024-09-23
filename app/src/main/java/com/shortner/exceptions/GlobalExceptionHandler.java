@@ -6,14 +6,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.shortner.model.UrlErrorResponseDTO;
+import com.shortner.dto.ErrorResponseDTO;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 	
 	@ExceptionHandler(CustomSlugExistsException.class)
-	public ResponseEntity<UrlErrorResponseDTO> handleCustomSlugExistsException(CustomSlugExistsException e) {
-		UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+	public ResponseEntity<ErrorResponseDTO> handleCustomSlugExistsException(CustomSlugExistsException e) {
+		ErrorResponseDTO urlErrorResponseDTO = new ErrorResponseDTO();
 		urlErrorResponseDTO.setErrorCode(e.getMessage());
 		urlErrorResponseDTO.setStatus("409");
 		
@@ -21,8 +21,8 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(UrlProcessingException.class)
-	public ResponseEntity<UrlErrorResponseDTO> handleUrlProcessingException(UrlProcessingException e) {
-		UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+	public ResponseEntity<ErrorResponseDTO> handleUrlProcessingException(UrlProcessingException e) {
+		ErrorResponseDTO urlErrorResponseDTO = new ErrorResponseDTO();
 		urlErrorResponseDTO.setErrorCode(e.getMessage());
 		urlErrorResponseDTO.setStatus("400");
 		
@@ -30,8 +30,8 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<UrlErrorResponseDTO> handleException(Exception e) {
-		UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+	public ResponseEntity<ErrorResponseDTO> handleException(Exception e) {
+		ErrorResponseDTO urlErrorResponseDTO = new ErrorResponseDTO();
 		urlErrorResponseDTO.setErrorCode("Unexpected Error occured: " + e.getMessage());
 		urlErrorResponseDTO.setStatus("500");
 		
@@ -40,10 +40,10 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<UrlErrorResponseDTO> handleValidationException(MethodArgumentNotValidException e) {
+	public ResponseEntity<ErrorResponseDTO> handleValidationException(MethodArgumentNotValidException e) {
 		String message = e.getBindingResult().getFieldError().getDefaultMessage();
 		
-		UrlErrorResponseDTO urlErrorResponseDTO = new UrlErrorResponseDTO();
+		ErrorResponseDTO urlErrorResponseDTO = new ErrorResponseDTO();
 		urlErrorResponseDTO.setErrorCode(message);
 		urlErrorResponseDTO.setStatus("400");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(urlErrorResponseDTO);

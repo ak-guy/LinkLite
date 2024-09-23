@@ -5,14 +5,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.google.common.hash.Hashing;
+import com.shortner.dto.UrlDTO;
 import com.shortner.model.Url;
-import com.shortner.model.UrlDTO;
 import com.shortner.repository.UrlRepository;
 
 @Component
@@ -39,15 +41,16 @@ public class UrlServiceImplementation implements UrlService{
 		return expiryDateTimeObj;
 	}
 	
+	@Async
 	@Override
-	public Url createUrlwithRandomSlug(UrlDTO urlDTO) {
+	public CompletableFuture<Url> createUrlwithRandomSlug(UrlDTO urlDTO) {
 		String randomSlug = generateRandomSlug();
 		LocalDateTime createdDateTime = LocalDateTime.now();
 		LocalDateTime expiryDateTime = getExpirationDateTime(urlDTO.getExpiryDate(), createdDateTime);
 		
 		Url urltoPersiUrl = new Url(urlDTO.getUrl(), randomSlug, createdDateTime, expiryDateTime);
 		
-		return persistShortUrl(urltoPersiUrl);
+		return CompletableFuture.completedFuture(persistShortUrl(urltoPersiUrl));
 		
 	}
 	
@@ -73,13 +76,14 @@ public class UrlServiceImplementation implements UrlService{
 		return urlRepository.existsByShortUrl(slug);
 	}
 	
+	@Async
 	@Override
-	public Url createUrlWithCustomSlug(UrlDTO urlDTO) {
+	public CompletableFuture<Url> createUrlWithCustomSlug(UrlDTO urlDTO) {
 		LocalDateTime creationDateTime = LocalDateTime.now();
 		LocalDateTime expiryDateTime = getExpirationDateTime(urlDTO.getExpiryDate(), creationDateTime);
 		
 		Url toReturnUrl = new Url(urlDTO.getUrl(), urlDTO.getSlug(), creationDateTime, expiryDateTime);
-		return toReturnUrl;
+		return CompletableFuture.completedFuture(persistShortUrl(toReturnUrl));
 	}
 	
 	private String generateRandomSlug() {

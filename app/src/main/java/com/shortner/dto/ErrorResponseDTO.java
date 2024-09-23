@@ -1,13 +1,13 @@
-package com.shortner.model;
+package com.shortner.dto;
 
-public class UrlErrorResponseDTO {
+public class ErrorResponseDTO {
 	
 	private String errorCode;
 	private String status;
 	
-	public UrlErrorResponseDTO() {}
+	public ErrorResponseDTO() {}
 
-	public UrlErrorResponseDTO(String errorCode, String status) {
+	public ErrorResponseDTO(String errorCode, String status) {
 		super();
 		this.errorCode = errorCode;
 		this.status = status;

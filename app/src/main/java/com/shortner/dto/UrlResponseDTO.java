@@ -1,4 +1,4 @@
-package com.shortner.model;
+package com.shortner.dto;
 
 import java.time.LocalDateTime;
 
